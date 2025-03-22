@@ -11,6 +11,6 @@ COPY . .
 
 RUN go mod init myapp && go mod tidy && go build -o myapp
 
-EXPOSE 9092
+EXPOSE 8081
 
 CMD ["./myapp"]
