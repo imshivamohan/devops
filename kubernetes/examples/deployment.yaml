@@ -1,0 +1,20 @@
+apiVersion: apps/v1         # API version for Deployments (from apps group)
+kind: Deployment            # Resource type is a Deployment
+metadata:                   # Metadata for the Deployment
+  name: my-deployment       # Name of the Deployment
+  namespace: my-namespace   # Namespace scope
+spec:                       # Specification of the Deployment
+  replicas: 3               # Number of Pod replicas to maintain
+  selector:                 # How the Deployment identifies its Pods
+    matchLabels:            # Matches Pods with these labels
+      app: my-app           # Label key-value pair to select Pods
+  template:                 # Template for creating Pods
+    metadata:               # Metadata for Pods created by this Deployment
+      labels:               # Labels assigned to Pods
+        app: my-app         # Same label as in selector
+    spec:                   # Pod specification
+      containers:           # Containers in each Pod
+        - name: nginx-container # Container name
+          image: nginx         # Image to use
+          ports:               # Ports exposed by the container
+            - containerPort: 80 # Port 80 for HTTP

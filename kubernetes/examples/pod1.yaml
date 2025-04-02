@@ -1,0 +1,11 @@
+apiVersion: v1              # API version for Pods
+kind: Pod                   # Resource type is a Pod
+metadata:                   # Metadata for identifying the Pod
+  name: my-pod1              # Name of the Pod
+  namespace: my-namespace   # Specifies the namespace this Pod belongs to
+spec:                       # Specification of the Pod's desired state
+  containers:               # List of containers to run in the Pod
+    - name: nginxsss-container # Name of the container (for reference)
+      image: nginx           # Docker image to use (nginx web server)
+      ports:                 # Ports the container exposes
+        - containerPort: 80  # Port 80 (HTTP) inside the container

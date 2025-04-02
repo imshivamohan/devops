@@ -1,0 +1,4 @@
+apiVersion: v1              # Specifies the Kubernetes API version for this resource
+kind: Namespace             # Defines the type of resource (Namespace in this case)
+metadata:                   # Metadata section contains information about the resource
+  name: my-namespace        # Name of the namespace; all resources will be created under this scope
