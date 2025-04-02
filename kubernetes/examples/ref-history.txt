@@ -1,0 +1,215 @@
+ 1907  clear
+ 1908  ll
+ 1909  alias kubeclt='microk8s kubectl'
+ 1910  kubectl
+ 1911  clear
+ 1912  ll
+ 1913  clear
+ 1914  pwd
+ 1915  ll
+ 1916  cd testdocker/
+ 1917  ll
+ 1918  cd github/
+ 1919  ll
+ 1920  cd devops/
+ 1921  ll
+ 1922  cd kubernetes/
+ 1923  ll
+ 1924  cat why_kubernetes.md 
+ 1925  ll
+ 1926  vi first_deploymet_examples.md
+ 1927  git pull
+ 1928  git add .
+ 1929  git commit -m "added first_deploymet_examples.md"
+ 1930  git status
+ 1931  git push
+ 1932  clear
+ 1933  kubectl
+ 1934  microk8s kubectl 
+ 1935  kubectl 
+ 1936  clear
+ 1937  microk8s kubectl 
+ 1938  clear
+ 1939  alias kubectl='microk8s kubectl'
+ 1940  kubectl
+ 1941  alias k='microk8s kubectl'
+ 1942  k
+ 1943  clear
+ 1944  kubctl 
+ 1945  kubectl get pods
+ 1946  kubectl get ns
+ 1947  clear
+ 1948  ll
+ 1949  cd testdocker/github/
+ 1950  l
+ 1951  ll
+ 1952  cd devops/
+ 1953  ll
+ 1954  cd kubernetes/
+ 1955  ll
+ 1956  mkdir examples
+ 1957  cd examples/
+ 1958  ll
+ 1959  clear
+ 1960  ll
+ 1961  vi namespace.yaml
+ 1962  kubectl apply -f namespace.yaml 
+ 1963  kubectl get ns
+ 1964  vi pod.yaml
+ 1965  kubectl apply -f pod.yaml 
+ 1966  kubectl get pods
+ 1967  kubectl get pods -n my-namespace
+ 1968  kubectl describe my-pod  -n my-namespace
+ 1969  kubectl describe pod my-pod  -n my-namespace
+ 1970  ll
+ 1971  kubectl stop pod my-pod
+ 1972  kubectl kill pod my-pod
+ 1973  kubectl --help
+ 1974  ll
+ 1975  kubectl get pods -n my-namespace
+ 1976  kubectl delete pod my-pod -n my-namespace
+ 1977  ll
+ 1978  kubectl get pods -n my-namespace
+ 1979  vi deployment.yaml
+ 1980  kubectl apply -f deployment.yaml 
+ 1981  kubectl get deployment -n my-namespace
+ 1982  kubectl describe deployment -n my-namespace
+ 1983  ll
+ 1984  kubectl get deployment -n my-namespace
+ 1985  kubectl get pods -n my-namespace
+ 1986  kubectl describe pod my-deployment-cd7898dc8-bl2rn -n my-namespace
+ 1987  ll
+ 1988  clera
+ 1989  ll
+ 1990  clear
+ 1991  ll
+ 1992  kubectl get pods -n my-namespace
+ 1993  kubectl delete pod my-deployment-cd7898dc8-bl2rn -n my-namespace
+ 1994  kubectl get pods -n my-namespace
+ 1995  ll
+ 1996  clear
+ 1997  kubectl get deployments -n my-namespace
+ 1998  ll
+ 1999  kubectl get deployments -n my-namespace -o yaml
+ 2000  ll
+ 2001  cd testdocker/
+ 2002  ll
+ 2003  cd github/
+ 2004  ll
+ 2005  cd devops/
+ 2006  ll
+ 2007  cd kubernetes/
+ 2008  ll
+ 2009  clear
+ 2010  ll
+ 2011  cd examples/
+ 2012  ll
+ 2013  cat pod.yaml 
+ 2014  ll
+ 2015  clear
+ 2016  ll
+ 2017  cat pod.yaml 
+ 2018  microk8s status
+ 2019  kubectl get ns
+ 2020* microk8s kubectl 
+ 2021  alias k='microk8s kubectl'
+ 2022  k get pods -n my-namespace
+ 2023  k get deployment -n my-namespace
+ 2024  k delete deployment my-deployment -n my-namespace
+ 2025  k get pods -n my-namespace
+ 2026  k get deployment -n my-namespace
+ 2027  k get pods -n my-namespace
+ 2028  ll
+ 2029  vi pod.yaml 
+ 2030  k apply -f pod.yaml 
+ 2031  k get logs
+ 2032  k get logs -n my-namespace
+ 2033  k get log -n my-namespace
+ 2034  k get inspect pod  -n my-namespace
+ 2035  k get pod -n my-namespace
+ 2036  k get pod inspcet -n my-namespace
+ 2037  k inspect pod my-pod -n my-namespace
+ 2038  k
+ 2039  k get --help
+ 2040  k inspcet --help
+ 2041  k describe --help
+ 2042  k pod --help
+ 2043  k get pod --help
+ 2044  k get pod -n my-namespace
+ 2045  k logs my-pod -n my-namespace
+ 2046  clear
+ 2047  k get pod -n my-namespace
+ 2048  k exec -it my-pod -n my-namespace /bin/sh
+ 2049  k exec -it my-pod -n my-namespace -- /bin/sh
+ 2050  k exec -it my-pod -n my-namespace -- /sh
+ 2051  k exec -it my-pod -n my-namespace -- sh
+ 2052  k exec -it my-pod -n my-namespace --  /bin/sh
+ 2053  k exec -it my-pod -n my-namespace --  /bash
+ 2054  k get pods -A
+ 2055  k delete my-pod -n my-namespace
+ 2056  k delete pod  my-pod -n my-namespace
+ 2057  vi pod.yaml 
+ 2058  k apply -f pod.yaml 
+ 2059  k exec -it my-pod -n my-namespace --  /sh
+ 2060  k exec -it my-pod -n my-namespace --  bin/sh
+ 2061  k exec -it my-pod -n my-namespace --  /bin/sh
+ 2062  k get pods -n my-namespace
+ 2063  k logs my-pod -n my-namespace
+ 2064  k get pods -n my-namespace
+ 2065  k logs my-pod -n my-namespace
+ 2066  k logs -f my-pod -n my-namespace
+ 2067  k get pods -n my-namespace
+ 2068  k exec -it my-pod -n my-namespace --  /bin/sh
+ 2069  k get pods -n my-namespace
+ 2070  vi pod.yaml 
+ 2071  k apply -f pod.yaml 
+ 2072  k get pod -n my-namespace
+ 2073  k delete pod  my-pod -n my-namespace
+ 2074  k apply -f pod.yaml 
+ 2075  k get pod -n my-namespace
+ 2076  k describe  pod my-pod -n my-namespace
+ 2077  k get pod -n my-namespace
+ 2078  k exec -it my-pod -n my-namespace /bin/sh
+ 2079  k exec -it my-pod -n my-namespace -- /bin/sh
+ 2080* 
+ 2081  k delete pod  my-pod -n my-namespace
+ 2082  k get pod -n my-namespace
+ 2083  vi pod.yaml 
+ 2084  k apply -f pod.yaml 
+ 2085  vi pod.yaml 
+ 2086  k apply -f pod.yaml 
+ 2087  vi pod.yaml 
+ 2088  k get pod -n my-namespace
+ 2089  k get pod -n my-namespace -wide
+ 2090  k get pod -n my-namespace -o wide
+ 2091  k get pod -n my-namespace --show-labels
+ 2092  ll
+ 2093  vi service.yaml
+ 2094  k apply -f service.yaml 
+ 2095  k get service -n my-namespace
+ 2096  k describe  pod my-pod -n my-namespace
+ 2097  k describe service my-service -n my-namespace
+ 2098  curl 10.1.107.26:80
+ 2099  ll
+ 2100  vi pod1.yaml
+ 2101  k apply -f pod1.yaml 
+ 2102* 
+ 2103  k describe my-pod1 -n my-namespace 
+ 2104  k describe pod my-pod1 -n my-namespace 
+ 2105  k get pod -n my-namespace --show-labes
+ 2106  k get pod -n my-namespace --show-labels
+ 2107  k exec -it my-pod -n my-namespace -- /bin/sh
+ 2108  k get pod -n my-namespace --show-labels
+ 2109  ll
+ 2110  git status
+ 2111  ll
+ 2112  git status
+ 2113  cd ..
+ 2114  ll
+ 2115  git status
+ 2116  git pull
+ 2117  git add .
+ 2118  git commit -m "added examples"
+ 2119  git push
+ 2120  clear
+ 2121  ls -la
