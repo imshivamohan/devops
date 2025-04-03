@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: go-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Frontend</title>
+        <script>
+          async function fetchData() {
+            const response = await fetch('http://go-app-service');
+            const data = await response.text();
+            document.getElementById('output').innerText = data;
+          }
+        </script>
+    </head>
+    <body onload="fetchData()">
+        <h1>Frontend App</h1>
+        <p id="output">Loading...</p>
+    </body>
+    </html>
+

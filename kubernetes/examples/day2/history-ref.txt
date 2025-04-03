@@ -1,0 +1,107 @@
+2043  ll
+ 2044  vi go-app-deployment.yaml
+ 2045  kubectl apply -f go-app-deployment.yaml 
+ 2046  kubectl get deployment -n go-app
+ 2047  kubectl describe deployment go-app -n go-app 
+ 2048  kubeclt get pods -n go-app
+ 2049  kubectl get pods -n go-app
+ 2050  kubectl describe deployment go-app -n go-app 
+ 2051  kubectl get deployment -n go-app
+ 2052  kubectl get pods -n go-app
+ 2053  vi go-app-service.yaml
+ 2054  kubectl apply 0f go-app-service.yaml 
+ 2055  kubectl apply -f go-app-service.yaml 
+ 2056  kubectl get service -n go-app
+ 2057  kubectl describe service go-app-service -n go-app
+ 2058  ll
+ 2059  vi frontend-configmap.yaml
+ 2060  vi frontend-deployment.yaml
+ 2061  ll
+ 2062  ls -la
+ 2063  kubectl apply -f frontend-configmap.yaml 
+ 2064  kubectl get configmap -n go-app
+ 2065  kubectl get configmap -n go-app -o yaml
+ 2066  kubectl get configmap -n go-app
+ 2067  kubectl get configmap frontend-config -n go-app
+ 2068  kubectl get configmap frontend-config -n go-app -o yaml
+ 2069  ll
+ 2070  kubectl apply -f frontend-deployment.yaml 
+ 2071  kubectl get deployment -n go-app
+ 2072  kubectl describe deployment frontend -n go-app
+ 2073  kubectl get pods -n go-app
+ 2074  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2075  ll
+ 2076  vi frontend-service.yaml
+ 2077  kubectl apply -f frontend-service.yaml 
+ 2078  kubectl get svc -n go-app
+ 2079  kubectl get svc frontend-service -n go-app -o yaml
+ 2080  kubectl run test-pod --image=busybox --rm -it -- /bin/sh
+ 2081  kubectl run test-pod --image=busybox --rm -it -- apk --update add curl
+ 2082  kubectl run test-pod --image=bualpine -rm -it -- sh
+ 2083  kubectl run test-pod --image=bualpine --rm -it -- sh
+ 2084  kubectl run test-pod1 --image=bualpine --rm -it -- sh
+ 2085  kubectl run test-pod1 333 --image=alpine --rm -it -- sh
+ 2086  kubectl run test-pod1333 --image=alpine --rm -it -- sh
+ 2087  kubectl get pods -A
+ 2088  kubectl run test-pod1333 --image=alpine --rm -it -n go-app -- sh
+ 2089  kubectl get services -n go-app
+ 2090  kubectl get nodes -o wide
+ 2091  curl localhost:30720
+ 2092  curl localhost:80
+ 2093  curl localhost:30720
+ 2094  ll
+ 2095  cat frontend-configmap.yaml 
+ 2096  kubectl run test-pod1333 --image=alpine --rm -it -n go-app -- sh
+ 2097  ll
+ 2098  vi frontend-service.yaml 
+ 2099  kubectl apply -f frontend-service.yaml 
+ 2100  ls -la
+ 2101  kubectl get svc -n go-app
+ 2102  vi frontend-service.yaml 
+ 2103  kubectl get svc frontend-service -n go-app -o yaml
+ 2104  vi frontend-service.yaml 
+ 2105  kubectl apply -f frontend-service.yaml 
+ 2106  vi frontend-service.yaml 
+ 2107  kubectl apply -f frontend-service.yaml 
+ 2108  kubectl get svc frontend-service -n go-app -o yaml
+ 2109  kubectl get svc -n go-app
+ 2110  kubectl run test-pod1333 --image=ubuntu --rm -it -n go-app -- sh
+ 2111  kubectl run test-pod1333 --image=ubnginx -rm -it -n go-app -- sh
+ 2112  kubectl run test-pod1333 --image=nginx --rm -it -n go-app -- sh
+ 2113  kubectl run test-pod13d33 --image=nginx --rm -it -n go-app -- sh
+ 2114  kubectl run test-pod1333 --image=nginx --rm -it  -- sh
+ 2115  kubectl get pod -n go-app
+ 2116  kubectl exec -it frontend-8f8cc56dd-ksmxs -- sh
+ 2117  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2118  kubectl get configmap -n go-app
+ 2119  kubectl edit configmap frontend-config  -n go-app
+ 2120  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2121  curl http://go-app-service.go-app.svc.cluster.local:8081
+ 2122  curl http://go-app-service.go-app.svc.cluster.local:30033
+ 2123  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2124  kubectl edit configmap frontend-config  -n go-app
+ 2125  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2126  kubectl edit configmap frontend-config  -n go-app
+ 2127  kubectl get pods -n go-app
+ 2128  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2129  kubectl edit configmap frontend-config  -n go-app
+ 2130  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2131  kubectl edit configmap frontend-config  -n go-app
+ 2132  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2133  kubectl edit configmap frontend-config  -n go-app
+ 2134  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2135  kubectl get pods -n go-app
+ 2136  kubectl logs pod frontend-8f8cc56dd-ksmxs -n go-app
+ 2137  kubectl logs  frontend-8f8cc56dd-ksmxs -n go-app
+ 2138  kubectl get pods -n go-app
+ 2139  kubectl logs go-app-78497fdc48-2wnp4  -n go-app
+ 2140  kubectl get svc -n go-app
+ 2141  kubectl edit svc go-app-service -n go-app
+ 2142  kubectl logs go-app-78497fdc48-2wnp4  -n go-app
+ 2143  kubectl logs  frontend-8f8cc56dd-ksmxs -n go-app
+ 2144  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2145  kubectl edit configmap frontend-config  -n go-app
+ 2146  kubectl logs go-app-78497fdc48-2wnp4  -n go-app
+ 2147  kubectl exec -it frontend-8f8cc56dd-ksmxs -n go-app -- sh
+ 2148  kubectl logs go-app-78497fdc48-2wnp4  -n go-app
+ 2149  kubectl logs  frontend-8f8cc56dd-ksmxs -n go-app
