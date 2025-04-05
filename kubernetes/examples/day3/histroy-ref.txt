@@ -1,0 +1,172 @@
+2336  kubectl logs 
+ 2337  kubectl get pods
+ 2338  kubectl logs -f webapp-deployment-99658b56d-kjnmh
+ 2339  kubectl port-forward webapp-deployment-99658b56d-kjnmh 8081:5000
+ 2340  ll
+ 2341  vi app.py
+ 2342  vi templates/login.html 
+ 2343  vi templates/form.html
+ 2344  vi templates/list.html
+ 2345  vi requirements.txt 
+ 2346  vi pythonapp-dockerfile.yaml 
+ 2347  docker build -f pythonapp-dockerfile.yaml  -t siva9989/employee-app .
+ 2348  vi pythonapp-dockerfile.yaml 
+ 2349  docker build -f pythonapp-dockerfile.yaml  -t siva9989/employee-app .
+ 2350  docker push  siva9989/employee-app
+ 2351  ll
+ 2352  kubectl get deployment 
+ 2353  kubectl delete deployment postgres-deployment
+ 2354  kubectl delete deployment webapp-deployment
+ 2355  ll
+ 2356  vi k8s/
+ 2357  cd k8s/
+ 2358  ll
+ 2359  vi postgres-secret.yaml
+ 2360  vi postgres-deployment.yaml
+ 2361  vi postgres-service.yaml
+ 2362  vi flask-deployment.yaml
+ 2363  vi flask-service.yaml
+ 2364  ll
+ 2365  kubectl get service
+ 2366  kubectl delete kubernetes
+ 2367  kubectl delete postgres-service
+ 2368  kubeclt delete webapp-service
+ 2369  kubectl delete webapp-service
+ 2370  kubectl 
+ 2371  kubectl get ns
+ 2372  kubectl delete ns default
+ 2373  kubectl get svc
+ 2374  kubectl delete svc postgres-service -n default
+ 2375  kubectl delete svc web-service -n default
+ 2376  kubectl delete svc webapp-service -n default
+ 2377  clear
+ 2378  pwd
+ 2379  ls -la
+ 2380  kubectl apply -f k8s/postgres-secret.yaml
+ 2381  kubectl apply -f k8s/postgres-deployment.yaml
+ 2382  kubectl apply -f k8s/postgres-service.yaml
+ 2383  kubectl apply -f k8s/flask-deployment.yaml
+ 2384  kubectl apply -f k8s/flask-service.yaml
+ 2385  cd ..
+ 2386  kubectl apply -f k8s/postgres-secret.yaml
+ 2387  kubectl apply -f k8s/postgres-deployment.yaml
+ 2388  kubectl apply -f k8s/postgres-service.yaml
+ 2389  kubectl apply -f k8s/flask-deployment.yaml
+ 2390  kubectl apply -f k8s/flask-service.yaml
+ 2391  kubectl get pods
+ 2392  vi k8s/flask-deployment.yaml 
+ 2393  kubectl apply -f k8s/flask-deployment.yaml
+ 2394  kubectl get pods
+ 2395  kubectl get delete  pod test-pod
+ 2396  kubectl get delete  pod test-pod -n default
+ 2397  kubectl delete  pod test-pod -n default
+ 2398  kubectl delete pod test-pod1 -n default
+ 2399  kubectl get pods
+ 2400  postgres-6bbd9cb877-nzdgg
+ 2401  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U employee_user -d employees_db 
+ 2402  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U employee_user 
+ 2403  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U postgres
+ 2404  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U employee_user
+ 2405  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U employee_user -d postgres
+ 2406  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U employee_user -d employee_db
+ 2407  kubectl get pods
+ 2408  kubectl exec -it flask-app-6458cb6665-wxghx -- sh
+ 2409  kubectl get pods
+ 2410  kubectl port-forward flask-app-6458cb6665-wxghx 9797:5000
+ 2411  kubectl exec -it postgres-6bbd9cb877-nzdgg -- psql -U employee_user -d employee_db
+ 2412  ll
+ 2413  cd templates/
+ 2414  ll
+ 2415  rm -rf employee_*
+ 2416  ll
+ 2417  cd ..
+ 2418  ll
+ 2419  cd k8s/
+ 2420  ll
+ 2421  rm rf webapp-*
+ 2422  ll
+ 2423  cat postgres-secret.yaml 
+ 2424  clear
+ 2425  ll
+ 2426  cat postgres-service.yaml 
+ 2427  ll
+ 2428  cat flask-service.yaml 
+ 2429  curl localhost:80
+ 2430  curl http://flask-service.defalut.svc.cluster.local:80
+ 2431  kubectl get svc flask-service
+ 2432  ll
+ 2433  vi flask-service.yaml 
+ 2434  kubectl apply -f flask-service.yaml 
+ 2435  ll
+ 2436  kubectl get svc flask-service
+ 2437  curl localhost:30800
+ 2438  kubectl get deploymets
+ 2439  kubectl get deploymet
+ 2440  kubectl get deploymet -n default
+ 2441  kubectl get deploy -n default
+ 2442  kubectl get deploymet -n default
+ 2443  kubectl scale deployment flask-deployment --replicas=0
+ 2444  kubectl scale deployment flask-app --replicas=0
+ 2445  kubectl get deploymet -n default
+ 2446  kubectl get deploy -n default
+ 2447  kubectl scale deployment flask-app --replicas=1
+ 2448  kubectl get deploy -n default
+ 2449  kubectl scale deployment flask-app --replicas=1
+ 2450  kubectl get deploy -n default
+ 2451  clear
+ 2452  kubectl get pods 
+ 2453  kubectl get deploy -n default
+ 2454  kubectl scale deployment postgres --replicas=0
+ 2455  kubectl get deploy -n default
+ 2456  kubectl get pods 
+ 2457  kubectl scale deployment postgres --replicas=1
+ 2458  kubectl get pods 
+ 2459  kubectl rollout restart pod flask-app-6458cb6665-r58zn
+ 2460  kubectl rollout restart pod flask-app-6458cb6665-r58zn -n default
+ 2461  kubectl rollout restart pods flask-app-6458cb6665-r58zn -n default
+ 2462  kubectl rollout restart flask-app -n default
+ 2463  kubectl rollout restart deployment flask-app -n default
+ 2464  kubectl get pods 
+ 2465  kubectl scale deployment postgres --replicas=0
+ 2466  kubectl scale deployment flask-app --replicas=0
+ 2467  kubectl get pods
+ 2468  kubectl get deployments
+ 2469  kubectl get pods
+ 2470  clear
+ 2471  kubectl get deployments
+ 2472  kubectl scale deployment postgres --replicas=1
+ 2473  kubectl get pods
+ 2474  kubectl scale deployment flask-app --replicas=1
+ 2475  kubectl get deployments
+ 2476  kubectl get pods
+ 2477  kubectl get service 
+ 2478  kubectl get svc
+ 2479  kubectl get svc postgres-servcie -o yaml
+ 2480  kubectl get svc postgres-service -o yaml
+ 2481  kubectl get secrect
+ 2482  kubectl get secret
+ 2483  kubectl get secret prostgres-secret -o yam
+ 2484  kubectl get secret prostgres-secret -o yaml
+ 2485  kubectl get secret postgres-secret -o yaml
+ 2486  ll
+ 2487  kubectl get pods
+ 2488  kubectl exec -it postgres-6bbd9cb877-chwjb --  -U employee_user -d employee_db
+ 2489  kubectl exec -it postgres-6bbd9cb877-chwjb -- postgres -U employee_user -d employee_db
+ 2490  kubectl exec -it postgres-6bbd9cb877-chwjb -- psql -U employee_user -d employee_db
+ 2491  ll
+ 2492  cat postgres-deployment.yaml 
+ 2493  ls -la
+ 2494  kubectl get pods
+ 2495  kubectl exec -it postgres-6bbd9cb877-chwjb -- sh
+ 2496  ls -la
+ 2497  kubectl exec -it postgres-6bbd9cb877-chwjb -- sh
+ 2498  kubectl scale deployment postgres-app --replicas=0
+ 2499  kubectl get deployment 
+ 2500  kubectl scale deployment postgres --replicas=0
+ 2501  kubectl get pods
+ 2502  kubectl scale deployment postgres --replicas=1
+ 2503  kubectl get pods
+ 2504  kubectl exec -it postgres-6bbd9cb877-c7pmh -- sh -c "ls -la /var/lib/postgresql/data"
+ 2505  kubectl exec -it postgres-6bbd9cb877-c7pmh -- sh -c "ls -la /var/lib/postgresql/data/base"
+ 2506  kubectl exec -it postgres-6bbd9cb877-c7pmh -- psql -U employee_user -d employee_db
+ 2507  ll

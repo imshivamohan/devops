@@ -1,0 +1,8 @@
+<h2>Employee List</h2>
+<ul>
+    {% for emp in employees %}
+    <li>{{ emp[1] }} - {{ emp[2] }} - {{ emp[3] }}</li>
+    {% endfor %}
+</ul>
+<a href="/form"><button>Back</button></a>
+
