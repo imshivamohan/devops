@@ -1,0 +1,69 @@
+ 2673  kubectl get ns
+ 2674  kubectl create namespace python-webapp
+ 2675  ls -la
+ 2676  kubectl apply -f  flask-deployment.yaml -n python-webapp
+ 2677  kubectl get pods -n python-webapp
+ 2678  vi postgres-deployment.yaml 
+ 2679  kubectl get pods -n python-webapp
+ 2680  kubectl logs -n python-webapp
+ 2681  kubectl logs flask-app-6458cb6665-f2zlt -n python-webapp
+ 2682  kubectl logs -f  flask-app-6458cb6665-f2zlt -n python-webapp
+ 2683  kubectl describe pod flask-app-6458cb6665-f2zlt -n python-webapp
+ 2684  ls -la
+ 2685  vi postgres-secret.yaml 
+ 2686  vi postgres-service.yaml 
+ 2687  kubectl apply -f postgres-secret.yaml
+ 2688  kubectl get secret -n python-webapp
+ 2689  kubectl get secret -n python-webapp -o yaml
+ 2690  ll
+ 2691  kubectl apply -f postgres-deployment.yaml 
+ 2692  kubectl get deployments -n python-webapp
+ 2693  cat flask-service.yaml 
+ 2694  kubectl apply -f flask-service.yaml -n python-webapp
+ 2695  kubectl get service -n default
+ 2696  kubectl delete svc flask-service
+ 2697  kubectl delete svc postgres-service
+ 2698  kubectl apply -f flask-service.yaml -n python-webapp
+ 2699  clear
+ 2700  kubectl get service -n python-webapp
+ 2701  ll
+ 2702  kubectl apply -f postgres-service.yaml 
+ 2703  kubectl get service -n python-webapp
+ 2704  kubectl get
+ 2705  kubectl get secret -n python-webapp -o yaml
+ 2706  kubectl get pods -n python-webapp
+ 2707  kubectl exec -it postgres-6bbd9cb877-rtqbs -- psql
+ 2708  kubectl exec -it postgres-6bbd9cb877-rtqbs -- sh
+ 2709  kubectl exec -it postgres-6bbd9cb877-rtqbs -n python-webapp  -- sh
+ 2710  clear
+ 2711  kubectl get pods -n python-webapp
+ 2712  kubectl get deploy -n python-webapp
+ 2713  kubectl scale deploy -n python-webapp replicas=0
+ 2714  kubectl scale deploy -n python-webapp replica=0
+ 2715  kubectl scale deploy -n python-webapp replica 0
+ 2716  history |grep scale
+ 2717  kubectl get deploy -n python-webapp
+ 2718  kubectl scale deploy falsk-app -n python-webapp replicas=0
+ 2719  kubectl scale deploy falsk-app -n python-webapp --replicas=0
+ 2720  kubectl scale deploy flask-app -n python-webapp --replicas=0
+ 2721  kubectl get deploy -n python-webapp
+ 2722  kubectl get pods -n python-webapp
+ 2723  kubectl scale deploy flask-app -n python-webapp --replicas=1
+ 2724  kubectl get pods -n python-webapp
+ 2725  kubectl exec -it postgres-6bbd9cb877-rtqbs -- sh
+ 2726  kubectl exec -it postgres-6bbd9cb877-rtqbs -n python-webapp -- sh
+ 2727  kubectl get deploy -n python-webapp
+ 2728  kubectl get pods -n python-webapp
+ 2729  kubectl scale deploy postgres -n python-webapp --replicas=0
+ 2730  kubectl get pods -n python-webapp
+ 2731  kubectl scale deploy postgres -n python-webapp --replicas=1
+ 2732* cat CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    e
+ 2733  kubectl get pods -n python-webapp
+ 2734  cat postgres-deployment.yaml
+ 2735  ll
+ 2736  kubectl get pods -n python-webapp
+ 2737  kubectl exec -it postgres-6bbd9cb877-x9h5h -n python-webapp -- sh
+ 2738  history

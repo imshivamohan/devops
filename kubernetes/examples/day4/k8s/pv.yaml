@@ -1,0 +1,11 @@
+apiVersion: v1              # API version for PV
+kind: PersistentVolume      # Resource type is a PersistentVolume
+metadata:                   # Metadata for the PV
+  name: my-pv               # Name of the PV
+spec:                       # Specification of the PV
+  capacity:                 # Storage capacity
+    storage: 1Gi            # 1 Gibibyte of storage
+  accessModes:              # Access modes for the volume
+    - ReadWriteOnce         # Can be mounted as read-write by one node
+  hostPath:                 # Type of storage (local host path for simplicity)
+    path: "/mnt/data" 
