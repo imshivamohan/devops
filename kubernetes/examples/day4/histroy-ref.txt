@@ -1,69 +1,102 @@
- 2673  kubectl get ns
- 2674  kubectl create namespace python-webapp
- 2675  ls -la
- 2676  kubectl apply -f  flask-deployment.yaml -n python-webapp
- 2677  kubectl get pods -n python-webapp
- 2678  vi postgres-deployment.yaml 
- 2679  kubectl get pods -n python-webapp
- 2680  kubectl logs -n python-webapp
- 2681  kubectl logs flask-app-6458cb6665-f2zlt -n python-webapp
- 2682  kubectl logs -f  flask-app-6458cb6665-f2zlt -n python-webapp
- 2683  kubectl describe pod flask-app-6458cb6665-f2zlt -n python-webapp
- 2684  ls -la
- 2685  vi postgres-secret.yaml 
- 2686  vi postgres-service.yaml 
- 2687  kubectl apply -f postgres-secret.yaml
- 2688  kubectl get secret -n python-webapp
- 2689  kubectl get secret -n python-webapp -o yaml
- 2690  ll
- 2691  kubectl apply -f postgres-deployment.yaml 
- 2692  kubectl get deployments -n python-webapp
- 2693  cat flask-service.yaml 
- 2694  kubectl apply -f flask-service.yaml -n python-webapp
- 2695  kubectl get service -n default
- 2696  kubectl delete svc flask-service
- 2697  kubectl delete svc postgres-service
- 2698  kubectl apply -f flask-service.yaml -n python-webapp
- 2699  clear
- 2700  kubectl get service -n python-webapp
- 2701  ll
- 2702  kubectl apply -f postgres-service.yaml 
- 2703  kubectl get service -n python-webapp
- 2704  kubectl get
- 2705  kubectl get secret -n python-webapp -o yaml
- 2706  kubectl get pods -n python-webapp
- 2707  kubectl exec -it postgres-6bbd9cb877-rtqbs -- psql
- 2708  kubectl exec -it postgres-6bbd9cb877-rtqbs -- sh
- 2709  kubectl exec -it postgres-6bbd9cb877-rtqbs -n python-webapp  -- sh
- 2710  clear
- 2711  kubectl get pods -n python-webapp
- 2712  kubectl get deploy -n python-webapp
- 2713  kubectl scale deploy -n python-webapp replicas=0
- 2714  kubectl scale deploy -n python-webapp replica=0
- 2715  kubectl scale deploy -n python-webapp replica 0
- 2716  history |grep scale
- 2717  kubectl get deploy -n python-webapp
- 2718  kubectl scale deploy falsk-app -n python-webapp replicas=0
- 2719  kubectl scale deploy falsk-app -n python-webapp --replicas=0
- 2720  kubectl scale deploy flask-app -n python-webapp --replicas=0
- 2721  kubectl get deploy -n python-webapp
- 2722  kubectl get pods -n python-webapp
- 2723  kubectl scale deploy flask-app -n python-webapp --replicas=1
- 2724  kubectl get pods -n python-webapp
- 2725  kubectl exec -it postgres-6bbd9cb877-rtqbs -- sh
- 2726  kubectl exec -it postgres-6bbd9cb877-rtqbs -n python-webapp -- sh
- 2727  kubectl get deploy -n python-webapp
- 2728  kubectl get pods -n python-webapp
- 2729  kubectl scale deploy postgres -n python-webapp --replicas=0
- 2730  kubectl get pods -n python-webapp
- 2731  kubectl scale deploy postgres -n python-webapp --replicas=1
- 2732* cat CREATE TABLE employees (
-    id SERIAL PRIMARY KEY,
-    name TEXT,
-    e
- 2733  kubectl get pods -n python-webapp
- 2734  cat postgres-deployment.yaml
- 2735  ll
- 2736  kubectl get pods -n python-webapp
- 2737  kubectl exec -it postgres-6bbd9cb877-x9h5h -n python-webapp -- sh
- 2738  history
+2795  ##################################################
+ 2796  kubectl create namespace python-webapp
+ 2797  kubectl apply -f postgres-secret.yaml 
+ 2798  ll
+ 2799  kubectl  apply -f postgres-deployment.yaml 
+ 2800  kubectl  apply -f postgres-service.yaml 
+ 2801  cat postgres-deployment.yaml
+ 2802  clear
+ 2803  ll
+ 2804  kubectl apply -f flask-deployment.yaml
+ 2805  kubectl apply -f flask-service.yaml
+ 2806  kubectl get svc -n python-webapp
+ 2807  kubectl get service -n python-webapp
+ 2808  ll
+ 2809  cat postgres.sql 
+ 2810  kubectl get secret -n python-webapp
+ 2811  kubectl describe secret postgres-secret-n python-webapp
+ 2812  kubectl describe secret postgres-secret -n python-webapp
+ 2813  kubectl get secret postgres-secret -n python-webapp -o yaml
+ 2814  kubectl get pods -n python-webapp
+ 2815  clear
+ 2816  kubectl exec -it postgres-6bbd9cb877-shsgn -n python-webapp -- sh
+ 2817  kubectl exec -it postgres-6bbd9cb877-shsgn -n python-webapp -- psql -U employee_user -d employee_db
+ 2818  ll
+ 2819  caty postgres.sql
+ 2820  cat postgres.sql
+ 2821  kubectl exec -it postgres-6bbd9cb877-shsgn -n python-webapp -- psql -U employee_user -d employee_db
+ 2822  kubectl get pods -n python-webapp
+ 2823  kubectl rollout restart postgres-6bbd9cb877-shsgn -n python-webapp
+ 2824  kubectl rollout restart pod postgres-6bbd9cb877-shsgn -n python-webapp
+ 2825  kubectl rollout restart pods postgres-6bbd9cb877-shsgn -n python-webapp
+ 2826  kubectl rollout restart  postgres-6bbd9cb877-shsgn -n python-webapp
+ 2827  kubectl rollout restart --help
+ 2828  kubectl rollout restart deployment -n python-webapp
+ 2829  kubectl get pods -n python-webapp
+ 2830  kubectl exec -it postgres-565f67f7bf-mkmdj -n python-webapp -- psql -U employee_user -d employee_db
+ 2831  clear
+ 2832  kubectl get pvc
+ 2833  kubectl get pv
+ 2834  clear
+ 2835  ll
+ 2836  vi pv.yaml
+ 2837  vi pvc.yaml
+ 2838  cat pv.yaml 
+ 2839  cat pvc.yaml 
+ 2840  vi postgres-deployment.yaml 
+ 2841  kubectl get pv
+ 2842  kubectl  apply -f pv.yaml 
+ 2843  kubectl get pv
+ 2844  kubectl apply -f postgres-deployment.yaml 
+ 2845  kubectl get pv
+ 2846  kubectl get pods -n python-webapp
+ 2847  kubectl get pv
+ 2848  kubectl get pods -n python-webapp
+ 2849  kubectl logs pod postgres-858bc4d7c8-5ncqf -n python-webapp
+ 2850  kubectl logs postgres-858bc4d7c8-5ncqf -n python-webapp
+ 2851  ls -la
+ 2852  kubectl get pods -n python-webapp
+ 2853  kubectl exec -it postgres-858bc4d7c8-5ncqf -n python-webapp -- psql -U employee_user -d employee_db
+ 2854  kubectl rollout restart --hlep
+ 2855  kubectl rollout restart --help
+ 2856  kubectl rollout restart deployment --selector=app=
+ 2857  kubectl get pods -n python-webapp --show-labels
+ 2858  kubectl rollout restart deployment --selector=app=postgres
+ 2859  kubectl rollout restart deployment --selector=app=postgres -n python-webapp
+ 2860  kubectl rollout restart deployment -n python-webapp --selector=app=postgres 
+ 2861  kubectl rollout restart deployment  --selector=app=postgres 
+ 2862  kubectl rollout restart -n python-webapp deployment  --selector=app=postgres 
+ 2863  kubectl get deployments -n python-webapp --show-labels
+ 2864  kubectl rollout restart deployments -n python-webapp
+ 2865  kubectl get pods -n python-webapp --show-labels
+ 2866  kubectl get pods -n python-webapp
+ 2867  kubectl get pv
+ 2868  cd /mnt/data/
+ 2869  ll
+ 2870  cd /mnt/data/
+ 2871  ls -la
+ 2872  ls -la /mnt/data/
+ 2873  sudo cd /mnt/data/
+ 2874  sudo su -
+ 2875  ll
+ 2876  kubectl apply -f pvc.yaml 
+ 2877  vi pvc.yaml 
+ 2878  kubectl apply -f pvc.yaml 
+ 2879  kubectl get pvc
+ 2880  kubectl get pvc -n python-webapp
+ 2881  cat pvc.yaml 
+ 2882  kubectl get pvc -n python-webapp
+ 2883  kubectl get pv -n python-webapp
+ 2884  vi postgres-deployment.yaml 
+ 2885  kubectl apply -f postgres-deployment.yaml 
+ 2886  kubectl get pods -n python-webapp 
+ 2887  kubectl describe pod postgres-66bff98ff9-7px4x -n python-webapp 
+ 2888  kubectl get pv -n python-webapp
+ 2889  kubectl get pods -n python-webapp 
+ 2890  kubectl exec -it postgres-66bff98ff9-7px4x -n python-webapp -- psql -U employee_user -d employee_db
+ 2891  kubectl get deploy -n python-webapp
+ 2892  kubectl rollout restart deploy/postgres -n python-webapp
+ 2893  kubectl exec -it postgres-66bff98ff9-7px4x -n python-webapp -- psql -U employee_user -d employee_db
+ 2894  kubectl get pods -n python-webapp 
+ 2895  kubectl exec -it postgres-c9bddf686-gttqg -n python-webapp -- psql -U employee_user -d employee_db
+ 2896  clear
