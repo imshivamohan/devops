@@ -1,0 +1,11 @@
+apiVersion: v1              # API version for PVC
+kind: PersistentVolumeClaim # Resource type is a PVC
+metadata:                   # Metadata for the PVC
+  name: my-pvc              # Name of the PVC
+  namespace: webapp   # Namespace scope
+spec:                       # Specification of the PVC
+  accessModes:              # Requested access modes
+    - ReadWriteOnce         # Matches PV's access mode
+  resources:                # Requested resources
+    requests:               # Minimum requirements
+      storage: 1Gi          # Requests 1Gi of storage
