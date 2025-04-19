@@ -1,0 +1,1870 @@
+# Ultimate_Kubernetes_Cheat_Sheet  🚀
+
+This cheat sheet is designed for students learning Kubernetes, using a Flask application (`siva9989/employee-app`) connected to a PostgreSQL database (`postgres:14`) as a practical example. It covers **all major Kubernetes concepts** (29 total): Namespace, Pod, Deployment, StatefulSet, Services (ClusterIP, Headless, NodePort, LoadBalancer), ConfigMap, Secret, Persistent Volume (PV), PersistentVolumeClaim (PVC), Job, CronJob, DaemonSet, Ingress, RBAC (Role and RoleBinding), NetworkPolicy, Horizontal Pod Autoscaler (HPA), Pod Disruption Budget (PDB), Resource Quotas and Limits, Custom Resource Definitions (CRDs), Service Account, Cluster Autoscaler, Taints and Tolerations, Pod Affinity/Anti-Affinity, Init Containers, Admission Controllers, and Operators. Each concept includes:
+
+- **Explanation**: Purpose and use case, tied to the Flask-PostgreSQL app.
+- **YAML Configuration**: Example YAML with inline comments.
+- **Usage**: How the component is used in the app.
+- **Testing**: Step-by-step commands to verify functionality.
+- **Dependencies**: Required resources for the component or tests.
+
+The **End-to-End Flow** provides a logical deployment and testing sequence. All resources are scoped to the `webapp` namespace, and configurations are compatible with MicroK8s, using `microk8s-hostpath` for storage. The example includes a PostgreSQL table (`employees`) to demonstrate database interaction.
+
+---
+
+## **Prerequisites**
+
+- **MicroK8s**: Installed and running (e.g., on Ubuntu, per April 9, 2025).
+- **kubectl**: Configured to interact with MicroK8s (`microk8s kubectl`).
+- **MicroK8s Add-ons**:
+  - Enable Ingress: `microk8s enable ingress` for Ingress testing.
+  - Enable MetalLB: `microk8s enable metallb:192.168.1.100-192.168.1.200` for LoadBalancer testing.
+  - Enable Metrics Server: `microk8s enable metrics-server` for HPA testing.
+  - Enable Calico (optional): For NetworkPolicy support (`microk8s enable network`).
+- **Docker Hub Access**: Ensure `siva9989/employee-app:latest`, `postgres:14`, and `fluent/fluentd` images are accessible.
+- **Additional Tools**:
+  - `curl`, `wrk` (for load testing), a browser, or `psql` for testing.
+  - Strimzi Operator for CRD testing.
+  - Cloud provider CLI (e.g., AWS CLI) for Cluster Autoscaler in cloud setups.
+- **User Setup**: A user (`student`) or service account for RBAC testing.
+
+---
+
+## **1️⃣ Namespace**
+
+### **Explanation**
+- **Purpose**: Isolates resources within a cluster, preventing naming conflicts.
+- **Use Case**: Grouping Flask and PostgreSQL resources in the `webapp` namespace.
+
+### **YAML (`namespace.yaml`)**
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: webapp  # Namespace for the Flask-PostgreSQL app
+```
+
+### **Usage**
+- Creates the `webapp` namespace to scope all application resources.
+- Ensures isolation from other projects.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f namespace.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get namespaces  # Lists 'webapp'
+   kubectl describe namespace webapp
+   ```
+
+### **Dependencies**
+- None.
+
+---
+
+## **2️⃣ Pod**
+
+### **Explanation**
+- **Purpose**: Smallest deployable unit, running one or more containers.
+- **Use Case**: Running a single Flask app instance for initial testing.
+
+### **YAML (`flask-pod.yaml`)**
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: flask-pod
+  namespace: webapp
+  labels:
+    app: flask-app
+spec:
+  containers:
+  - name: flask-app
+    image: siva9989/employee-app:latest
+    ports:
+    - containerPort: 5000
+    env:
+    - name: DB_HOST
+      value: "postgres-service"
+    - name: DB_NAME
+      valueFrom:
+        secretKeyRef:
+          name: postgres-secret
+          key: POSTGRES_DB
+    - name: DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: postgres-secret
+          key: POSTGRES_USER
+    - name: DB_PASS
+      valueFrom:
+        secretKeyRef:
+          name: postgres-secret
+          key: POSTGRES_PASSWORD
+```
+
+### **Usage**
+- Runs a Flask container, connecting to PostgreSQL via Secret credentials.
+- Used for quick testing before scaling.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f secret.yaml
+   kubectl apply -f postgres-service.yaml
+   kubectl apply -f flask-pod.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get pods -n webapp
+   kubectl describe pod flask-pod -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl port-forward pod/flask-pod 8080:5000 -n webapp
+   curl http://localhost:8080  # Returns Flask response
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Secret (`postgres-secret`).
+- PostgreSQL Service (`postgres-service`).
+
+---
+
+## **3️⃣ Deployment**
+
+### **Explanation**
+- **Purpose**: Manages stateless apps, maintaining replicas and supporting scaling/updates.
+- **Use Case**: Running multiple Flask instances for high availability.
+
+### **YAML (`flask-deployment.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  namespace: webapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image: siva9989/employee-app:latest
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+```
+
+### **Usage**
+- Manages 2 Flask Pods with resource limits.
+- Connects to PostgreSQL via Service and Secret.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f secret.yaml
+   kubectl apply -f postgres-service.yaml
+   kubectl apply -f flask-deployment.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get deployments -n webapp
+   kubectl get pods -n webapp -l app=flask-app
+   ```
+3. Test:
+   ```bash
+   kubectl port-forward pod/<flask-pod-name> 8080:5000 -n webapp
+   curl http://localhost:8080
+   kubectl scale deployment flask-app --replicas=3 -n webapp
+   kubectl get pods -n webapp -l app=flask-app
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Secret (`postgres-secret`).
+- PostgreSQL Service (`postgres-service`).
+
+---
+
+## **4️⃣ StatefulSet**
+
+### **Explanation**
+- **Purpose**: Manages stateful apps with stable identities and persistent storage.
+- **Use Case**: Running PostgreSQL with stable DNS and data persistence.
+
+### **YAML (`postgres-statefulset.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: webapp
+spec:
+  serviceName: postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: microk8s-hostpath
+```
+
+### **Usage**
+- Runs PostgreSQL with stable identity (`postgres-0`) and persistent storage.
+- Uses a Headless Service for DNS.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f secret.yaml
+   kubectl apply -f postgres-headless-service.yaml
+   kubectl apply -f postgres-statefulset.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get statefulsets -n webapp
+   kubectl get pods -n webapp -l app=postgres
+   kubectl get pvc -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl exec -it postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "CREATE TABLE employees (id SERIAL PRIMARY KEY, name TEXT, email TEXT, role TEXT);"
+   kubectl exec -it postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "INSERT INTO employees (name, email, role) VALUES ('John Doe', 'john@example.com', 'Developer');"
+   kubectl delete pod postgres-0 -n webapp
+   kubectl exec -it postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "SELECT * FROM employees;"
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Secret (`postgres-secret`).
+- Headless Service (`postgres-headless`).
+- MicroK8s `hostpath` storage class.
+
+---
+
+## **5️⃣ Service - ClusterIP**
+
+### **Explanation**
+- **Purpose**: Exposes Pods internally via a stable virtual IP.
+- **Use Case**: Allowing Flask to connect to PostgreSQL internally.
+
+### **YAML (`postgres-service.yaml`)**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: webapp
+spec:
+  selector:
+    app: postgres
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432
+  type: ClusterIP
+```
+
+### **Usage**
+- Exposes PostgreSQL at `postgres-service.webapp.svc.cluster.local:5432`.
+- Used by Flask for database connectivity.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f postgres-service.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get services -n webapp
+   kubectl describe service postgres-service -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl run -i --tty test-pod --image=busybox --rm --restart=Never -n webapp -- wget -qO- postgres-service:5432
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- StatefulSet or Pod with `app: postgres` label.
+
+---
+
+## **6️⃣ Service - NodePort**
+
+### **Explanation**
+- **Purpose**: Exposes Pods on a node’s port for external access.
+- **Use Case**: Accessing the Flask app externally in development.
+
+### **YAML (`flask-service.yaml`)**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+  namespace: webapp
+spec:
+  type: NodePort
+  selector:
+    app: flask-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+    nodePort: 30800
+```
+
+### **Usage**
+- Exposes Flask on port 30800 of each node.
+- Allows external testing via `<node-ip>:30800`.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f flask-service.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get services -n webapp
+   kubectl describe service flask-service -n webapp
+   ```
+3. Test:
+   ```bash
+   curl http://<node-ip>:30800  # Or http://localhost:30800 in MicroK8s
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Deployment or Pod with `app: flask-app` label.
+
+---
+
+## **7️⃣ Service - Headless**
+
+### **Explanation**
+- **Purpose**: Provides direct DNS access to Pods without a cluster IP.
+- **Use Case**: Stable DNS for PostgreSQL Pods in the StatefulSet.
+
+### **YAML (`postgres-headless-service.yaml`)**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: webapp
+spec:
+  selector:
+    app: postgres
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432
+  clusterIP: None
+```
+
+### **Usage**
+- Provides DNS like `postgres-0.postgres-headless.webapp.svc.cluster.local`.
+- Used by PostgreSQL StatefulSet.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f postgres-headless-service.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get services -n webapp
+   kubectl describe service postgres-headless -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl run -i --tty test-pod --image=busybox --rm --restart=Never -n webapp -- nslookup postgres-0.postgres-headless.webapp.svc.cluster.local
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- StatefulSet with `app: postgres` label.
+
+---
+
+## **8️⃣ Service - LoadBalancer**
+
+### **Explanation**
+- **Purpose**: Exposes Pods externally via a load balancer IP.
+- **Use Case**: Public access to the Flask app in production.
+
+### **YAML (`flask-loadbalancer-service.yaml`)**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-loadbalancer
+  namespace: webapp
+spec:
+  type: LoadBalancer
+  selector:
+    app: flask-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+```
+
+### **Usage**
+- Assigns an external IP for Flask access.
+- Suitable for production.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f flask-loadbalancer-service.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get services -n webapp
+   kubectl describe service flask-loadbalancer -n webapp
+   ```
+3. Test:
+   ```bash
+   microk8s enable metallb:192.168.1.100-192.168.1.200
+   EXTERNAL_IP=$(kubectl get svc flask-loadbalancer -n webapp -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   curl http://$EXTERNAL_IP
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Deployment or Pod with `app: flask-app` label.
+- MetalLB.
+
+---
+
+## **9️⃣ ConfigMap**
+
+### **Explanation**
+- **Purpose**: Stores non-sensitive configuration data.
+- **Use Case**: Providing Flask app settings (e.g., environment, log level).
+
+### **YAML (`configmap.yaml`)**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flask-config
+  namespace: webapp
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "debug"
+```
+
+### **Usage**
+- Mounts configuration as environment variables in Flask Pods.
+- Can be used for PostgreSQL non-sensitive settings.
+
+### **Testing**
+1. Update `flask-deployment.yaml` to include ConfigMap:
+   ```yaml
+   spec:
+     template:
+       spec:
+         containers:
+         - name: flask-app
+           env:
+           - name: APP_ENV
+             valueFrom:
+               configMapKeyRef:
+                 name: flask-config
+                 key: APP_ENV
+           - name: LOG_LEVEL
+             valueFrom:
+               configMapKeyRef:
+                 name: flask-config
+                 key: LOG_LEVEL
+           # Other env vars as before
+   ```
+2. Apply:
+   ```bash
+   kubectl apply -f configmap.yaml
+   kubectl apply -f flask-deployment.yaml
+   ```
+3. Verify:
+   ```bash
+   kubectl get configmaps -n webapp
+   kubectl exec <flask-pod-name> -n webapp -- env  # Shows APP_ENV, LOG_LEVEL
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Deployment (`flask-app`).
+
+---
+
+## **10️⃣ Secret**
+
+### **Explanation**
+- **Purpose**: Stores sensitive data (e.g., passwords) securely.
+- **Use Case**: Providing PostgreSQL credentials.
+
+### **YAML (`secret.yaml`)**
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: webapp
+type: Opaque
+stringData:
+  POSTGRES_DB: employee_db
+  POSTGRES_USER: employee_user
+  POSTGRES_PASSWORD: secret123
+```
+
+### **Usage**
+- Supplies credentials to Flask and PostgreSQL.
+- Mounted as environment variables.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f secret.yaml
+   kubectl apply -f flask-deployment.yaml
+   kubectl apply -f postgres-statefulset.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get secrets -n webapp
+   kubectl exec <flask-pod-name> -n webapp -- env  # Shows DB_NAME, etc.
+   kubectl exec postgres-0 -n webapp -- env  # Shows POSTGRES_DB, etc.
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+
+---
+
+## **11️⃣ Persistent Volume (PV)**
+
+### **Explanation**
+- **Purpose**: Represents cluster storage for persistent data.
+- **Use Case**: Storing PostgreSQL data.
+
+### **YAML (`pv.yaml`)**
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+```
+
+### **Usage**
+- Provides storage for a PVC used by PostgreSQL.
+- Ensures data persistence.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f pv.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get pv
+   kubectl describe pv my-pv
+   ```
+
+### **Dependencies**
+- None.
+
+---
+
+## **12️⃣ PersistentVolumeClaim (PVC)**
+
+### **Explanation**
+- **Purpose**: Requests storage from a PV or provisioner.
+- **Use Case**: Binding to PV for PostgreSQL storage.
+
+### **YAML (`pvc.yaml`)**
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+  namespace: webapp
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+### **Testing**
+1. Update `postgres-statefulset.yaml` to use `my-pvc`:
+   ```yaml
+   spec:
+     volumeClaimTemplates: []
+     volumes:
+     - name: postgres-data
+       persistentVolumeClaim:
+         claimName: my-pvc
+   ```
+2. Apply:
+   ```bash
+   kubectl apply -f pv.yaml
+   kubectl apply -f pvc.yaml
+   kubectl apply -f postgres-statefulset.yaml
+   ```
+3. Verify:
+   ```bash
+   kubectl get pv
+   kubectl get pvc -n webapp
+   kubectl exec postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "SELECT * FROM employees;"
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- PV (`my-pv`).
+
+---
+
+## **13️⃣ Job**
+
+### **Explanation**
+- **Purpose**: Runs a task to completion.
+- **Use Case**: Initializing the PostgreSQL `employees` table.
+
+### **YAML (`db-init-job.yaml`)**
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init-job
+  namespace: webapp
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      containers:
+      - name: db-init
+        image: postgres:14
+        command: ["psql", "-h", "postgres-service", "-U", "employee_user", "-d", "employee_db", "-c", "CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, name TEXT, email TEXT, role TEXT); INSERT INTO employees (name, email, role) VALUES ('Jane Doe', 'jane@example.com', 'Manager') ON CONFLICT DO NOTHING;"]
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+      restartPolicy: Never
+```
+
+### **Usage**
+- Creates the `employees` table and inserts data.
+- Runs once and terminates.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f secret.yaml
+   kubectl apply -f postgres-service.yaml
+   kubectl apply -f db-init-job.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get jobs -n webapp
+   kubectl get pods -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl logs <job-pod-name> -n webapp
+   kubectl exec postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "SELECT * FROM employees;"
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Secret (`postgres-secret`).
+- PostgreSQL Service (`postgres-service`).
+
+---
+
+## **14️⃣ CronJob**
+
+### **Explanation**
+- **Purpose**: Schedules Jobs at specified intervals.
+- **Use Case**: Backing up the PostgreSQL database daily.
+
+### **YAML (`db-backup-cronjob.yaml`)**
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup-cronjob
+  namespace: webapp
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: db-backup
+            image: postgres:14
+            command: ["sh", "-c", "pg_dump -h postgres-service -U employee_user employee_db > /backup/db_backup_$(date +%F).sql"]
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            volumeMounts:
+            - name: backup
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup
+            emptyDir: {}
+```
+
+### **Usage**
+- Schedules daily database backups.
+- Stores backups temporarily (production would use persistent storage).
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f db-backup-cronjob.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get cronjobs -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl create job --from=cronjob/db-backup-cronjob manual-backup -n webapp
+   kubectl exec <job-pod-name> -n webapp -- cat /backup/db_backup_$(date +%F).sql
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Secret (`postgres-secret`).
+- PostgreSQL Service (`postgres-service`).
+
+---
+
+## **15️⃣ DaemonSet**
+
+### **Explanation**
+- **Purpose**: Runs a Pod on every node for cluster-wide tasks.
+- **Use Case**: Running Fluentd to collect logs from Flask and PostgreSQL.
+
+### **YAML (`monitoring-daemonset.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitoring-agent
+  namespace: webapp
+spec:
+  selector:
+    matchLabels:
+      app: monitoring
+  template:
+    metadata:
+      labels:
+        app: monitoring
+    spec:
+      containers:
+      - name: fluentd
+        image: fluent/fluentd
+        resources:
+          limits:
+            memory: "200Mi"
+          requests:
+            memory: "100Mi"
+        volumeMounts:
+        - name: logs
+          mountPath: /fluentd/log
+      volumes:
+      - name: logs
+        hostPath:
+          path: /var/log/containers
+```
+
+### **Usage**
+- Collects logs from all nodes for monitoring.
+- Enhances observability.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f monitoring-daemonset.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get daemonsets -n webapp
+   kubectl get pods -n webapp -l app=monitoring -o wide
+   ```
+3. Test:
+   ```bash
+   kubectl logs <fluentd-pod-name> -n webapp
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+
+---
+
+## **16️⃣ Ingress**
+
+### **Explanation**
+- **Purpose**: Routes external HTTP/HTTPS traffic to Services.
+- **Use Case**: Accessing the Flask app via `employee-app.local`.
+
+### **YAML (`flask-ingress.yaml`)**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flask-ingress
+  namespace: webapp
+spec:
+  rules:
+  - host: employee-app.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: flask-service
+            port:
+              number: 80
+```
+
+### **Usage**
+- Routes `http://employee-app.local/` to Flask.
+- Provides a clean URL.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f flask-ingress.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get ingress -n webapp
+   kubectl describe ingress flask-ingress -n webapp
+   ```
+3. Test:
+   ```bash
+   microk8s enable ingress
+   INGRESS_IP=$(kubectl get ingress -n webapp -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+   echo "$INGRESS_IP employee-app.local" | sudo tee -a /etc/hosts
+   curl http://employee-app.local
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Service (`flask-service`).
+- Ingress controller.
+
+---
+
+## **17️⃣ RBAC - Role and RoleBinding**
+
+### **Explanation**
+- **Purpose**: Controls access to resources via roles.
+- **Use Case**: Allowing a `student` user to view Pods.
+
+### **YAML (`rbac.yaml`)**
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: webapp
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-reader-binding
+  namespace: webapp
+subjects:
+- kind: User
+  name: student
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+
+### **Usage**
+- Grants read-only Pod access in `webapp`.
+- Enhances security.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f rbac.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get role,rolebinding -n webapp
+   ```
+3. Test (using ServiceAccount for simplicity):
+   ```yaml
+   apiVersion: v1
+   kind: ServiceAccount
+   metadata:
+     name: test-sa
+     namespace: webapp
+   ---
+   apiVersion: rbac.authorization.k8s.io/v1
+   kind: RoleBinding
+   metadata:
+     name: pod-reader-sa-binding
+     namespace: webapp
+   subjects:
+   - kind: ServiceAccount
+     name: test-sa
+     namespace: webapp
+   roleRef:
+     kind: Role
+     name: pod-reader
+     apiGroup: rbac.authorization.k8s.io
+   ```
+   ```bash
+   kubectl apply -f sa.yaml
+   kubectl auth can-i get pods --as=system:serviceaccount:webapp:test-sa -n webapp
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+
+---
+
+## **18️⃣ NetworkPolicy**
+
+### **Explanation**
+- **Purpose**: Restricts network traffic to/from Pods.
+- **Use Case**: Allowing only Flask to access PostgreSQL.
+
+### **YAML (`networkpolicy.yaml`)**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-flask-to-postgres
+  namespace: webapp
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: flask-app
+    ports:
+    - protocol: TCP
+      port: 5432
+```
+
+### **Usage**
+- Restricts PostgreSQL access to Flask Pods.
+- Enhances database security.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f networkpolicy.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get networkpolicies -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl exec <flask-pod-name> -n webapp -- curl postgres-service:5432
+   kubectl run -i --tty test-pod --image=busybox --rm -n webapp -- wget -qO- postgres-service:5432  # Should timeout
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- StatefulSet (`postgres`).
+- Deployment (`flask-app`).
+- Network plugin (e.g., Calico).
+
+---
+
+## **19️⃣ Horizontal Pod Autoscaler (HPA)**
+
+### **Explanation**
+- **Purpose**: Scales Pods based on metrics (e.g., CPU usage).
+- **Use Case**: Scaling Flask to handle traffic spikes.
+
+### **YAML (`hpa.yaml`)**
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flask-hpa
+  namespace: webapp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flask-app
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+### **Usage**
+- Scales Flask Pods (2–5) based on 70% CPU usage.
+- Ensures efficient resource use.
+
+### **Testing**
+1. Apply:
+   ```bash
+   microk8s enable metrics-server
+   kubectl apply -f flask-deployment.yaml
+   kubectl apply -f hpa.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get hpa -n webapp
+   kubectl describe hpa flask-hpa -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl port-forward svc/flask-service 8080:80 -n webapp
+   wrk -t10 -c100 -d30s http://localhost:8080
+   kubectl get pods -n webapp -l app=flask-app
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Deployment (`flask-app`).
+- Metrics Server.
+
+---
+
+## **20️⃣ Pod Disruption Budget (PDB)**
+
+### **Explanation**
+- **Purpose**: Ensures minimum Pod availability during disruptions.
+- **Use Case**: Maintaining Flask availability during maintenance.
+
+### **YAML (`pdb.yaml`)**
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: flask-pdb
+  namespace: webapp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: flask-app
+```
+
+### **Usage**
+- Ensures at least 1 Flask Pod is available.
+- Protects service uptime.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f flask-deployment.yaml
+   kubectl apply -f pdb.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get pdb -n webapp
+   kubectl describe pdb flask-pdb -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl drain <node-name> --ignore-daemonsets
+   kubectl get pods -n webapp -l app=flask-app
+   kubectl uncordon <node-name>
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Deployment (`flask-app`).
+
+---
+
+## **21️⃣ Resource Quotas and Limits**
+
+### **Explanation**
+- **Purpose**: Restricts resource usage at namespace/Pod level.
+- **Use Case**: Limiting Flask and PostgreSQL resource consumption.
+
+### **YAML (`resource-quota.yaml`)**
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: webapp-quota
+  namespace: webapp
+spec:
+  hard:
+    pods: 10
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "6"
+    limits.memory: 12Gi
+```
+
+### **Usage**
+- Caps namespace resources.
+- Sets per-Pod limits in `flask-deployment.yaml` (see above).
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f resource-quota.yaml
+   kubectl apply -f flask-deployment.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get resourcequotas -n webapp
+   kubectl describe resourcequota webapp-quota -n webapp
+   ```
+3. Test:
+   ```bash
+   kubectl scale deployment flask-app --replicas=15 -n webapp  # Should fail
+   kubectl describe pod <flask-pod-name> -n webapp  # Shows limits
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+
+---
+
+## **22️⃣ Custom Resource Definitions (CRDs)**
+
+### **Explanation**
+- **Purpose**: Extends Kubernetes with custom resources.
+- **Use Case**: Deploying a Kafka cluster for Flask event logging (per March 30, 2025 interest).
+
+### **YAML (`kafka.yaml`)**
+```yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: my-kafka
+  namespace: webapp
+spec:
+  kafka:
+    replicas: 1
+    listeners:
+    - name: plain
+      port: 9092
+      type: internal
+      tls: false
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 1
+    storage:
+      type: ephemeral
+```
+
+### **Usage**
+- Deploys Kafka for event-driven communication.
+- Flask could publish employee actions to Kafka.
+
+### **Testing**
+1. Install Strimzi:
+   ```bash
+   kubectl apply -f 'https://strimzi.io/install/latest?namespace=webapp' -n webapp
+   ```
+2. Apply:
+   ```bash
+   kubectl apply -f kafka.yaml
+   ```
+3. Verify:
+   ```bash
+   kubectl get kafka -n webapp
+   kubectl get pods -n webapp -l strimzi.io/cluster=my-kafka
+   ```
+4. Test:
+   ```bash
+   kubectl run kafka-client --rm -it --image=strimzi/kafka:latest-kafka-3.4.0 --namespace=webapp -- bash
+   kafka-topics.sh --bootstrap-server my-kafka-kafka-bootstrap:9092 --create --topic employee-events
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Strimzi operator.
+
+---
+
+## **23️⃣ Service Account**
+
+### **Explanation**
+- **Purpose**: Provides Pod identity for Kubernetes API access.
+- **Use Case**: Allowing Flask to list Pods for monitoring.
+
+### **YAML (`service-account.yaml`)**
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flask-sa
+  namespace: webapp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-lister
+  namespace: webapp
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: flask-pod-lister
+  namespace: webapp
+subjects:
+- kind: ServiceAccount
+  name: flask-sa
+  namespace: webapp
+roleRef:
+  kind: Role
+  name: pod-lister
+  apiGroup: rbac.authorization.k8s.io
+```
+
+### **Usage**
+- Grants Flask Pods permission to list Pods via the API.
+- Useful for app-level monitoring or integration.
+
+### **Testing**
+1. Update `flask-deployment.yaml`:
+   ```yaml
+   spec:
+     template:
+       spec:
+         serviceAccountName: flask-sa
+   ```
+2. Apply:
+   ```bash
+   kubectl apply -f service-account.yaml
+   kubectl apply -f flask-deployment.yaml
+   ```
+3. Verify:
+   ```bash
+   kubectl get sa -n webapp
+   kubectl get role,rolebinding -n webapp
+   ```
+4. Test:
+   ```bash
+   kubectl exec -it <flask-pod-name> -n webapp -- bash
+   TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+   curl -H "Authorization: Bearer $TOKEN" --insecure https://kubernetes.default.svc/api/v1/namespaces/webapp/pods
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+
+---
+
+## **24️⃣ Cluster Autoscaler**
+
+### **Explanation**
+- **Purpose**: Scales cluster nodes based on resource demand.
+- **Use Case**: Adding nodes to MicroK8s in a cloud setup when Flask or PostgreSQL needs more resources.
+
+### **YAML (`cluster-autoscaler.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      serviceAccountName: cluster-autoscaler
+      containers:
+      - image: k8s.gcr.io/autoscaling/cluster-autoscaler:v1.24.0
+        name: cluster-autoscaler
+        command:
+        - ./cluster-autoscaler
+        - --cloud-provider=aws  # Replace with your cloud provider
+        - --namespace=kube-system
+        env:
+        - name: AWS_REGION
+          value: "us-west-2"  # Replace with your region
+```
+
+### **Usage**
+- Automatically adds/removes nodes based on pod scheduling needs.
+- Ensures Flask and PostgreSQL have sufficient compute resources.
+
+### **Testing**
+1. **Prerequisites**: Deploy MicroK8s on a cloud provider (e.g., AWS) with a node group.
+2. Install Cluster Autoscaler:
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml
+   ```
+3. Apply custom YAML:
+   ```bash
+   kubectl apply -f cluster-autoscaler.yaml
+   ```
+4. Verify:
+   ```bash
+   kubectl get pods -n kube-system -l app=cluster-autoscaler
+   kubectl logs -n kube-system -l app=cluster-autoscaler
+   ```
+5. Test:
+   - Increase Flask replicas to trigger scaling:
+     ```bash
+     kubectl scale deployment flask-app --replicas=10 -n webapp
+     ```
+     - Check node count:
+       ```bash
+       kubectl get nodes
+       ```
+
+### **Dependencies**
+- Namespace (`kube-system`).
+- Cloud provider setup.
+- RBAC for Cluster Autoscaler.
+
+---
+
+## **25️⃣ Taints and Tolerations**
+
+### **Explanation**
+- **Purpose**: Controls which Pods can schedule on specific nodes.
+- **Use Case**: Reserving a node for PostgreSQL to ensure database performance.
+
+### **YAML (`postgres-statefulset-toleration.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: webapp
+spec:
+  # Same as before, add tolerations
+  template:
+    spec:
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "postgres"
+        effect: "NoSchedule"
+      # Rest of the spec as in StatefulSet
+```
+
+### **Usage**
+- Taints a node to only allow PostgreSQL Pods.
+- Ensures dedicated resources for the database.
+
+### **Testing**
+1. Taint a node:
+   ```bash
+   kubectl taint nodes <node-name> dedicated=postgres:NoSchedule
+   ```
+2. Apply updated StatefulSet:
+   ```bash
+   kubectl apply -f postgres-statefulset-toleration.yaml
+   ```
+3. Verify:
+   ```bash
+   kubectl get nodes -o wide
+   kubectl describe node <node-name>  # Shows taint
+   kubectl get pods -n webapp -o wide  # PostgreSQL on tainted node
+   ```
+4. Test:
+   - Try scheduling Flask Pod:
+     ```bash
+     kubectl apply -f flask-pod.yaml
+     ```
+     - Should remain unscheduled unless toleration is added.
+
+### **Dependencies**
+- Namespace (`webapp`).
+- StatefulSet (`postgres`).
+
+---
+
+## **26️⃣ Pod Affinity/Anti-Affinity**
+
+### **Explanation**
+- **Purpose**: Influences Pod scheduling based on node or Pod locations.
+- **Use Case**: Co-locating Flask and PostgreSQL for low latency or spreading Flask Pods for resilience.
+
+### **YAML (`flask-deployment-affinity.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  namespace: webapp
+spec:
+  # Same as before, add affinity
+  template:
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: postgres
+            topologyKey: kubernetes.io/hostname
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: flask-app
+              topologyKey: kubernetes.io/hostname
+      # Rest of the spec as in Deployment
+```
+
+### **Usage**
+- Ensures Flask Pods run on the same node as PostgreSQL (affinity).
+- Prefers spreading Flask Pods across nodes (anti-affinity).
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f postgres-statefulset.yaml
+   kubectl apply -f flask-deployment-affinity.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get pods -n webapp -o wide  # Flask and PostgreSQL on same node
+   ```
+3. Test:
+   - Scale Flask:
+     ```bash
+     kubectl scale deployment flask-app --replicas=3 -n webapp
+     ```
+     - Check distribution:
+       ```bash
+       kubectl get pods -n webapp -o wide  # Flask Pods spread across nodes
+       ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- StatefulSet (`postgres`).
+
+---
+
+## **27️⃣ Init Containers**
+
+### **Explanation**
+- **Purpose**: Runs setup tasks before main containers start.
+- **Use Case**: Initializing the PostgreSQL `employees` table.
+
+### **YAML (`postgres-statefulset-init.yaml`)**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: webapp
+spec:
+  # Same as before, add initContainers
+  template:
+    spec:
+      initContainers:
+      - name: init-db
+        image: postgres:14
+        command: ["psql", "-h", "postgres-service", "-U", "employee_user", "-d", "employee_db", "-c", "CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, name TEXT, email TEXT, role TEXT);"]
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+      # Rest of the spec as in StatefulSet
+```
+
+### **Usage**
+- Initializes the database schema before PostgreSQL starts.
+- Replaces the separate Job for setup.
+
+### **Testing**
+1. Apply:
+   ```bash
+   kubectl apply -f secret.yaml
+   kubectl apply -f postgres-service.yaml
+   kubectl apply -f postgres-statefulset-init.yaml
+   ```
+2. Verify:
+   ```bash
+   kubectl get pods -n webapp -l app=postgres
+   kubectl logs postgres-0 -n webapp -c init-db
+   ```
+3. Test:
+   ```bash
+   kubectl exec postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "SELECT * FROM employees;"
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Secret (`postgres-secret`).
+- PostgreSQL Service (`postgres-service`).
+
+---
+
+## **28️⃣ Admission Controllers**
+
+### **Explanation**
+- **Purpose**: Enforces policies during resource creation.
+- **Use Case**: Requiring resource limits for all Pods in `webapp`.
+
+### **Configuration**
+- Admission Controllers are enabled via the Kubernetes API server, not YAML.
+- Example: Enable `LimitRanger` in MicroK8s:
+  ```bash
+  microk8s config > config.yaml
+  # Edit config.yaml to add --enable-admission-plugins=LimitRanger
+  microk8s stop
+  microk8s start
+  ```
+
+### **Usage**
+- Ensures all Pods specify CPU/memory limits.
+- Prevents resource overuse.
+
+### **Testing**
+1. Enable `LimitRanger` (requires admin access).
+2. Apply a Pod without limits:
+   ```yaml
+   apiVersion: v1
+   kind: Pod
+   metadata:
+     name: test-pod
+     namespace: webapp
+   spec:
+     containers:
+     - name: busybox
+       image: busybox
+       command: ["sleep", "3600"]
+   ```
+   ```bash
+   kubectl apply -f test-pod.yaml  # Should fail
+   ```
+3. Verify:
+   ```bash
+   kubectl get pods -n webapp
+   ```
+4. Test with limits:
+   - Use `flask-pod.yaml` (has limits) and confirm it deploys.
+
+### **Dependencies**
+- Namespace (`webapp`).
+- Cluster admin access.
+
+---
+
+## **29️⃣ Operators**
+
+### **Explanation**
+- **Purpose**: Manages complex apps via custom controllers.
+- **Use Case**: Using the PostgreSQL Operator for advanced database management.
+
+### **YAML (`postgres-operator.yaml`)**
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: postgres-operator
+---
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: employee-db
+  namespace: webapp
+spec:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-14.5-0
+  postgresVersion: 14
+  instances:
+  - name: instance1
+    replicas: 1
+    dataVolumeClaimSpec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: microk8s-hostpath
+  users:
+  - name: employee_user
+    databases: ["employee_db"]
+    password:
+      type: AlphaNumeric
+  backups:
+    pgbackrest:
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.38-0
+      repos:
+      - name: repo1
+        volume:
+          volumeClaimSpec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 1Gi
+            storageClassName: microk8s-hostpath
+```
+
+### **Usage**
+- Deploys and manages PostgreSQL with automated backups and scaling.
+- Simplifies database operations.
+
+### **Testing**
+1. Install Crunchy PostgreSQL Operator:
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/CrunchyData/postgres-operator/v5.3.0/installers/kubectl/postgres-operator.yml
+   ```
+2. Apply:
+   ```bash
+   kubectl apply -f postgres-operator.yaml
+   ```
+3. Verify:
+   ```bash
+   kubectl get postgresclusters -n webapp
+   kubectl get pods -n webapp
+   ```
+4. Test:
+   ```bash
+   kubectl exec -it <postgres-pod-name> -n webapp -- psql -U employee_user -d employee_db -c "CREATE TABLE employees (id SERIAL PRIMARY KEY, name TEXT, email TEXT, role TEXT);"
+   ```
+
+### **Dependencies**
+- Namespace (`webapp`, `postgres-operator`).
+- Crunchy PostgreSQL Operator.
+- MicroK8s `hostpath` storage class.
+
+---
+
+## **End-to-End Flow**
+
+### **Deployment and Testing Sequence**
+1. **Namespace**:
+   ```bash
+   kubectl apply -f namespace.yaml
+   ```
+2. **Resource Quota**:
+   ```bash
+   kubectl apply -f resource-quota.yaml
+   ```
+3. **RBAC**:
+   ```bash
+   kubectl apply -f rbac.yaml
+   ```
+4. **Service Account**:
+   ```bash
+   kubectl apply -f service-account.yaml
+   ```
+5. **ConfigMap**:
+   ```bash
+   kubectl apply -f configmap.yaml
+   ```
+6. **Secret**:
+   ```bash
+   kubectl apply -f secret.yaml
+   ```
+7. **PV and PVC**:
+   ```bash
+   kubectl apply -f pv.yaml
+   kubectl apply -f pvc.yaml
+   ```
+8. **Pod**:
+   ```bash
+   kubectl apply -f flask-pod.yaml
+   kubectl port-forward pod/flask-pod 8080:5000 -n webapp
+   ```
+9. **Deployment**:
+   ```bash
+   kubectl apply -f flask-deployment.yaml
+   ```
+10. **HPA**:
+    ```bash
+    kubectl apply -f hpa.yaml
+    ```
+11. **PDB**:
+    ```bash
+    kubectl apply -f pdb.yaml
+    ```
+12. **Service - ClusterIP**:
+    ```bash
+    kubectl apply -f postgres-service.yaml
+    ```
+13. **Service - NodePort**:
+    ```bash
+    kubectl apply -f flask-service.yaml
+    ```
+14. **Service - LoadBalancer**:
+    ```bash
+    kubectl apply -f flask-loadbalancer-service.yaml
+    ```
+15. **Service - Headless**:
+    ```bash
+    kubectl apply -f postgres-headless-service.yaml
+    ```
+16. **StatefulSet**:
+    ```bash
+    kubectl apply -f postgres-statefulset.yaml
+    ```
+17. **Init Containers** (alternative StatefulSet):
+    ```bash
+    kubectl apply -f postgres-statefulset-init.yaml
+    ```
+18. **Job**:
+    ```bash
+    kubectl apply -f db-init-job.yaml
+    ```
+19. **CronJob**:
+    ```bash
+    kubectl apply -f db-backup-cronjob.yaml
+    ```
+20. **DaemonSet**:
+    ```bash
+    kubectl apply -f monitoring-daemonset.yaml
+    ```
+21. **NetworkPolicy**:
+    ```bash
+    kubectl apply -f networkpolicy.yaml
+    ```
+22. **Ingress**:
+    ```bash
+    kubectl apply -f flask-ingress.yaml
+    ```
+23. **CRD (Kafka)**:
+    ```bash
+    kubectl apply -f kafka.yaml
+    ```
+24. **Cluster Autoscaler**:
+    ```bash
+    kubectl apply -f cluster-autoscaler.yaml
+    ```
+25. **Taints and Tolerations**:
+    ```bash
+    kubectl apply -f postgres-statefulset-toleration.yaml
+    ```
+26. **Pod Affinity/Anti-Affinity**:
+    ```bash
+    kubectl apply -f flask-deployment-affinity.yaml
+    ```
+27. **Admission Controllers**:
+    - Enable `LimitRanger` via MicroK8s config.
+28. **Operators**:
+    ```bash
+    kubectl apply -f postgres-operator.yaml
+    ```
+
+### **Cleanup**
+```bash
+kubectl delete namespace webapp
+kubectl delete namespace postgres-operator
+```
+
+---
+
+## **Summary**
+This cheat sheet covers all 29 Kubernetes concepts using a Flask-PostgreSQL app, providing:
+- **Comprehensive Coverage**: From Namespace to Operators, tailored to your app.
+- **Student-Friendly**: Clear explanations, YAMLs, and tests for hands-on learning.
+- **MicroK8s Compatibility**: Uses `microk8s-hostpath` and add-ons.
+- **Practical Integration**: Leverages your `siva9989/employee-app`, PostgreSQL setup (April 4, 2025), and Kafka interest (March 30, 2025).
+- **End-to-End Flow**: Logical sequence for deployment and testing.
+
+Use this in your classes to teach Kubernetes comprehensively! 🚀
