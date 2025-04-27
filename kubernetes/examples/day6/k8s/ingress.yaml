@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1 # Specifies the Kubernetes API version for Ingress
+kind: Ingress                    # Defines the resource type as an Ingress
+metadata:                        # Metadata section for the Ingress
+  name: nginx-ingress            # Name of the Ingress
+  namespace: kube-learn         # Namespace where the Ingress is created
+spec:                            # Specification for the Ingress's desired state
+  rules:                         # Routing rules for the Ingress
+    - host: app.local            # Domain name for this rule
+      http:                      # HTTP-specific configuration
+        paths:                   # Paths to route traffic
+          - path: /              # Root path
+            pathType: Prefix     # Matches any path starting with "/"
+            backend:             # Destination for traffic
+              service:           # Links to a Service
+                name: nginx-clusterip # Name of the Service to route to
+                port:            # Port on the Service
+                  number: 80     # Port 80 (HTTP)
