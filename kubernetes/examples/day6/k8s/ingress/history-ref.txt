@@ -1,0 +1,71 @@
+3547  kubectl get namespaces
+ 3548  kubectl apply -f namespace.yaml
+ 3549  kubectl apply -f secret.yaml
+ 3550  kubectl apply -f configmap.yaml
+ 3551  kubectl apply -f postgres-headless-service.yaml
+ 3552  kubectl apply -f postgres-service.yaml
+ 3553  kubectl apply -f postgres-statefulset.yaml
+ 3554  kubectl apply -f flask-deployment.yaml
+ 3555  kubectl apply -f flask-service.yaml
+ 3556  kubectl apply -f flask-ingress.yaml
+ 3557  kubectl apply -f rbac.yaml
+ 3558  kubectl apply -f sa.yaml
+ 3559  kubectl get namespaces
+ 3560  kubectl get secret,configmap -n webapp
+ 3561  kubectl get statefulsets,services -n webapp
+ 3562  kubectl get pvc -n webapp
+ 3563  kubectl get deployments,pods,services -n webapp
+ 3564  kubectl get ingress -n webapp
+ 3565  kubectl get role,rolebinding -n webapp
+ 3566  kubectl exec -it postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, name TEXT, email TEXT, role TEXT); INSERT INTO employees (name, email, role) VALUES ('John Doe', 'john@example.com', 'Developer') ON CONFLICT DO NOTHING;"
+ 3567  kubectl exec -it postgres-0 -n webapp -- psql -U employee_user -d employee_db -c "SELECT * FROM employees;"
+ 3568  microk8s enable ingress
+ 3569  kubectl get ingress -n webapp -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+ 3570  echo "127.0.0.1 employee-app.local" | sudo tee -a /etc/hosts
+ 3571  cat /etc/hosts
+ 3572  curl http://employee-app.local
+ 3573  hostname -i
+ 3574  hostname -I
+ 3575  curl http://192.168.1.5:30800
+ 3576  ll
+ 3577  cat flask-ingress.yaml 
+ 3578  clear
+ 3579  kubectl auth can-i get pods --as=system:serviceaccount:webapp:test-sa -n webapp  # Should return 'yes'
+ 3580  kubectl auth can-i delete pods --as=system:serviceaccount:webapp:test-sa -n webapp  # Should return 'no'
+ 3581  kubectl auth can-i get pods --as=system:serviceaccount:webapp:test-sa -n webapp 
+ 3582  kubectl auth can-i get pods --as=system:serviceaccount:webapp:test-sa1 -n webapp 
+ 3583  kubectl get pods -n webapp --as=student
+ 3584  kubectl delete pod flask-app-5697bd5669-jz4wk -n webapp --as=student
+ 3585  ll
+ 3586  cat sa.yaml 
+ 3587  kubectl get role,rolebinding -n webapp
+ 3588  ll
+ 3589  cat rbac.yaml 
+ 3590  vi rbac.yaml 
+ 3591  kubectl get pods -n webapp --as=student
+ 3592  kubectl get svc -n webapp --as=student
+ 3593  cp rbac.yaml rbac1.yaml 
+ 3594  vi rbac1.yaml 
+ 3595  kubectl apply -f rbac1.yaml 
+ 3596  kubectl get svc -n webapp --as=student
+ 3597  vi rbac1.yaml 
+ 3598  kubectl get role,rolebinding -n webapp
+ 3599  vi rbac1.yaml 
+ 3600  kubectl apply -f rbac1.yaml 
+ 3601  kubectl get role,rolebinding -n webapp
+ 3602  kubectl get svc -n webapp --as=student
+ 3603  kubectl get pods -n webapp --as=student
+ 3604  kubectl apply -f rbac1.yaml 
+ 3605  vi rbac1.yaml 
+ 3606  kubectl apply -f rbac*
+ 3607  kubectl apply -f rbac*.yaml
+ 3608  kubectl apply -f rbac*
+ 3609  kubectl apply -f rbac.yaml 
+ 3610  kubectl apply -f rbac1.yaml 
+ 3611  kubectl get role,rolebinding -n webapp
+ 3612  ll
+ 3613  cat sa.yaml 
+ 3614  ll
+ 3615  kubectl get svc -n webapp --as=student
+ 3616  kubectl get pod -n webapp --as=student
+ 3617  kubectl get role,rolebinding -n webapp
