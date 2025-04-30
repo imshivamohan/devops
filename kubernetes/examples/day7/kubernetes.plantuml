@@ -138,6 +138,28 @@ package "Cluster" {
       +removeNode(node: Node): void
     }
   }
+
+  package "RBAC" {
+    class Role {
+      -rules: List<Rule>
+      +definePermissions(): void
+    }
+
+    class RoleBinding {
+      -subjects: List<Subject>
+      -roleRef: Role
+      +bindRoleToUser(): void
+    }
+  }
+
+  package "Network Policy" {
+    class NetworkPolicy {
+      -podSelector: Selector
+      -ingressRules: List<Rule>
+      -egressRules: List<Rule>
+      +enforceTrafficRules(): void
+    }
+  }
 }
 
 package "Others" {
@@ -159,6 +181,9 @@ User --> APIServer
 APIServer --> etcd
 APIServer --> ControllerManager
 APIServer --> Scheduler
+APIServer --> Role : validates permissions
+Role --> RoleBinding : assigns to
+RoleBinding --> User : grants access
 ControllerManager --> Deployment
 Deployment --> ReplicaSet
 ReplicaSet --> Pod
@@ -170,12 +195,14 @@ Kubelet --> ContainerRuntime
 Kubelet --> Pod
 Pod --> Service
 Pod --> PersistentVolumeClaim
+Pod --> NetworkPolicy : restricted by
 PersistentVolumeClaim --> PersistentVolume
 PersistentVolume --> StorageClass
 Service --> KubeProxy
 Service --> Ingress
 Ingress --> IngressController
 Service --> CoreDNS
+KubeProxy --> NetworkPolicy : enforces
 ClusterAutoscaler --> NodePool
 MetricsServer --> Pod
 MetricsServer --> ClusterAutoscaler

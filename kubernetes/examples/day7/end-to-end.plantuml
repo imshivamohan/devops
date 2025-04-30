@@ -1,0 +1,115 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam monochrome true
+
+' Step 1: Namespace Creation
+package "Step 1: Namespace Creation" {
+  actor User
+  [User] --> [kubectl] : create namespace flask-postgres-app
+  [kubectl] --> [API Server] : Send Namespace Request
+  [API Server] --> [etcd] : Store Namespace
+}
+
+' Step 2: ConfigMap Creation
+package "Step 2: ConfigMap Creation" {
+  [User] --> [kubectl] : apply configmap.yaml
+  [kubectl] --> [API Server] : Submit ConfigMap
+  [API Server] --> [etcd] : Store ConfigMap
+  [etcd] --> [ConfigMap: flask-config]
+}
+
+' Step 3: Secret Creation
+package "Step 3: Secret Creation" {
+  [User] --> [kubectl] : apply secret.yaml
+  [kubectl] --> [API Server] : Submit Secret
+  [API Server] --> [etcd] : Encrypt & Store Secret
+  [etcd] --> [Secret: postgres-secret]
+}
+
+' Step 4: Deploy PostgreSQL
+package "Step 4: Deploy PostgreSQL" {
+  [User] --> [kubectl] : apply postgres-deployment.yaml
+  [kubectl] --> [API Server] : Submit Deployment
+  [API Server] --> [etcd] : Store Deployment
+  [API Server] --> [ReplicaSet: postgres] : Create ReplicaSet
+  [ReplicaSet: postgres] --> [Scheduler] : Request Pod scheduling
+  [Scheduler] --> [Kubelet] : Assign to Node
+  [Kubelet] --> [PostgreSQL Deployment] : Pull postgres:15 image
+  [PostgreSQL Deployment] --> [Pod: postgres] : Start Pod
+  [Pod: postgres] --> [PVC/PV: postgres-pvc] : Bind via StorageClass
+  [Pod: postgres] --> [Secret: postgres-secret] : Load DB credentials
+  [PVC/PV: postgres-pvc] --> [StorageClass: standard]
+}
+
+' Step 5: Deploy Flask App
+package "Step 5: Deploy Flask App" {
+  [User] --> [kubectl] : apply flask-deployment.yaml
+  [kubectl] --> [API Server] : Submit Deployment
+  [API Server] --> [etcd] : Store Deployment
+  [API Server] --> [ReplicaSet: flask] : Create ReplicaSet
+  [ReplicaSet: flask] --> [Scheduler] : Schedule 3 Flask Pods
+  [Scheduler] --> [Kubelet] : Assign to Nodes
+  [Kubelet] --> [Flask Deployment] : Pull flask-app:1.0
+  [Flask Deployment] --> [Pod: flask-1]
+  [Flask Deployment] --> [Pod: flask-2]
+  [Flask Deployment] --> [Pod: flask-3]
+  [Pod: flask-1] --> [ConfigMap: flask-config] : Load DB config
+  [Pod: flask-1] --> [PostgreSQL Service] : Connect to DB
+}
+
+' Step 6: PostgreSQL Service
+package "Step 6: PostgreSQL Service" {
+  [User] --> [kubectl] : apply postgres-service.yaml
+  [kubectl] --> [API Server] : Submit Service
+  [API Server] --> [etcd] : Store Service
+  [API Server] --> [KubeProxy] : Configure routing rules
+  [CoreDNS] --> [PostgreSQL Service] : Register DNS
+}
+
+' Step 7: Flask Service
+package "Step 7: Flask Service" {
+  [User] --> [kubectl] : apply flask-service.yaml
+  [kubectl] --> [API Server] : Submit Service
+  [API Server] --> [etcd] : Store Service
+  [API Server] --> [KubeProxy] : Configure load balancer
+  [CoreDNS] --> [Flask Service] : Register DNS
+  [Flask Service] --> [Pod: flask-1]
+  [Flask Service] --> [Pod: flask-2]
+  [Flask Service] --> [Pod: flask-3]
+}
+
+' Step 8: Ingress for External Access
+package "Step 8: Ingress for External Access" {
+  actor ExternalUser
+  [User] --> [kubectl] : apply ingress.yaml
+  [kubectl] --> [API Server] : Submit Ingress
+  [API Server] --> [etcd] : Store Ingress
+  [IngressController: NGINX] --> [Ingress] : Process Rules
+  [ExternalUser] --> [Ingress] : Access app.example.com
+  [Ingress] --> [Flask Service] : Route to Flask Pods
+}
+
+' Step 9: Scaling & Monitoring
+package "Step 9: Scaling & Monitoring" {
+  [MetricsServer] --> [API Server] : Send resource usage
+  [API Server] --> [ClusterAutoscaler] : Evaluate load
+  [ClusterAutoscaler] --> [NodePool] : Scale up if needed
+  [Scheduler] --> [Kubelet] : Schedule new Pods if needed
+  [ReplicaSet: flask] --> [Pod: flask-4] : Create replacement if any fails
+}
+
+' Step 10: End-to-End Flow
+package "Step 10: End-to-End Flow" {
+  [ExternalUser] --> [Ingress] : Access app.example.com
+  [Ingress] --> [Flask Service] : Internal traffic
+  [Flask Service] --> [Pod: flask-1] : Distribute request
+  [Flask Service] --> [Pod: flask-2] : Distribute request
+  [Flask Service] --> [Pod: flask-3] : Distribute request
+  [Pod: flask-1] --> [PostgreSQL Service] : DB query
+  [Pod: flask-2] --> [PostgreSQL Service] : DB query
+  [Pod: flask-3] --> [PostgreSQL Service] : DB query
+  [PostgreSQL Service] --> [Pod: postgres] : Respond with data
+}
+
+@enduml
