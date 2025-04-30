@@ -1,0 +1,183 @@
+@startuml
+
+' Define packages/namespaces
+package "User" {
+  class User {
+    -kubectlCommand: String
+    -yamlManifest: String
+    +submitDeployment(yamlManifest): void
+  }
+}
+
+package "Cluster" {
+  package "Control Plane" {
+    class APIServer {
+      -endpoint: String
+      -requestQueue: List<Request>
+      +receiveRequest(yamlManifest): void
+      +validateRequest(): Boolean
+      +storeState(): void
+    }
+
+    class ControllerManager {
+      -controllers: List<Controller>
+      +reconcileState(): void
+      +createPods(deploymentSpec): List<Pod>
+    }
+
+    class Scheduler {
+      -nodePoolList: List<NodePool>
+      -schedulingPolicies: List<Policy>
+      +schedulePod(pod: Pod): Node
+      +evaluateNodeResources(): Boolean
+    }
+
+    class etcd {
+      -clusterState: Map<String, Object>
+      +store(key, value): void
+      +retrieve(key): Object
+    }
+  }
+
+  package "Node Components" {
+    class Node {
+      -nodeName: String
+      -resources: Resources
+      +runPod(pod: Pod): void
+      +reportStatus(): void
+    }
+
+    class Kubelet {
+      -node: Node
+      +startPod(pod: Pod): void
+      +monitorPod(): void
+    }
+
+    class ContainerRuntime {
+      -runtimeType: String
+      +pullImage(image: String): void
+      +runContainer(pod: Pod): void
+    }
+
+    class Pod {
+      -podName: String
+      -containers: List<Container>
+      -status: String
+      +attachVolume(pvc: PVC): void
+    }
+  }
+
+  package "Workload Management" {
+    class Deployment {
+      -replicas: Integer
+      -podTemplate: PodTemplate
+      +updateReplicas(newReplicas: Integer): void
+      +rolloutUpdate(newVersion: String): void
+    }
+
+    class ReplicaSet {
+      -desiredPods: Integer
+      -currentPods: List<Pod>
+      +ensureReplicas(): void
+      +replaceFailedPod(): void
+    }
+  }
+
+  package "Networking" {
+    class Service {
+      -serviceName: String
+      -type: String
+      -clusterIP: String
+      +loadBalanceTraffic(pods: List<Pod>): void
+    }
+
+    class KubeProxy {
+      -node: Node
+      +configureNetworking(service: Service): void
+    }
+
+    class Ingress {
+      -rules: List<Rule>
+      +routeTraffic(): void
+    }
+
+    class IngressController {
+      -type: String
+      +processIngress(ingress: Ingress): void
+    }
+
+    class CoreDNS {
+      -dnsRecords: Map<String, String>
+      +resolveName(name: String): String
+    }
+  }
+
+  package "Storage" {
+    class PersistentVolumeClaim {
+      -storageRequest: String
+      +bindToPV(): void
+    }
+
+    class PersistentVolume {
+      -capacity: String
+      -storageType: String
+      +provision(): void
+    }
+
+    class StorageClass {
+      -provisioner: String
+      +createPV(): PersistentVolume
+    }
+  }
+
+  package "Node Pool" {
+    class NodePool {
+      -poolName: String
+      -nodeList: List<Node>
+      +addNode(node: Node): void
+      +removeNode(node: Node): void
+    }
+  }
+}
+
+package "Others" {
+  class ClusterAutoscaler {
+    -minNodes: Integer
+    -maxNodes: Integer
+    +scaleUp(nodePool: NodePool): void
+    +scaleDown(nodePool: NodePool): void
+  }
+
+  class MetricsServer {
+    -metrics: Map<String, ResourceUsage>
+    +collectMetrics(pod: Pod): ResourceUsage
+  }
+}
+
+' Relationships
+User --> APIServer
+APIServer --> etcd
+APIServer --> ControllerManager
+APIServer --> Scheduler
+ControllerManager --> Deployment
+Deployment --> ReplicaSet
+ReplicaSet --> Pod
+Scheduler --> Node
+Scheduler --> NodePool
+Node --> Kubelet
+Node --> KubeProxy
+Kubelet --> ContainerRuntime
+Kubelet --> Pod
+Pod --> Service
+Pod --> PersistentVolumeClaim
+PersistentVolumeClaim --> PersistentVolume
+PersistentVolume --> StorageClass
+Service --> KubeProxy
+Service --> Ingress
+Ingress --> IngressController
+Service --> CoreDNS
+ClusterAutoscaler --> NodePool
+MetricsServer --> Pod
+MetricsServer --> ClusterAutoscaler
+
+@enduml
